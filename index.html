@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hoonyverse Barcode</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/bwip-js/dist/bwip-js-min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root { --main-blue: #002c5f; --main-yellow: #f9c400; }
+        body { font-family: -apple-system, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 500px; margin: auto; }
+        .logo { text-align: center; margin: 20px 0; }
+        .logo img { width: 60%; max-width: 300px; height: auto; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .type-btn { padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: #fff; cursor: pointer; font-weight: bold; }
+        .type-btn.active { background: var(--main-blue); color: #fff; border-color: var(--main-blue); }
+        .input-wrapper { background: #fff; border: 2px solid var(--main-blue); border-radius: 12px; padding: 10px; }
+        textarea { width: 100%; height: 120px; border: none; outline: none; resize: none; font-size: 14px; box-sizing: border-box; }
+        .btn-row { display: flex; gap: 8px; margin-top: 20px; }
+        .main-btn { flex: 2; background: var(--main-yellow); color: var(--main-blue); border: none; padding: 15px 5px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
+        .scan-btn { flex: 1; background: #ddd; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .clear-btn { flex: 1; background: #ff4d4d; color: #fff; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        #save-all-btn { display: none; width: 100%; background: var(--main-blue); color: #fff; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 10px; display: none; background: #000; }
+        .card { background: #fff; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-text { font-size: 12px; font-weight: bold; color: #888; margin-bottom: 10px; word-break: break-all; background: #f9f9f9; padding: 5px; border-radius: 5px; }
+        canvas { max-width: 100%; height: auto !important; }
+        .download-btn { margin-top: 15px; background: #eef2ff; color: #007aff; border: none; padding: 10px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo"><img src="logo.png" alt="Hoonyverse Logo"></div>
+    <div class="grid">
+        <button class="type-btn active" onclick="setType('code128', this)">CODE128</button>
+        <button class="type-btn" onclick="setType('qr', this)">QR CODE</button>
+        <button class="type-btn" onclick="setType('datamatrix', this)">DATAMATRIX</button>
+        <button class="type-btn" onclick="setType('datamatrix_hkmc', this)">현대기아 전용</button>
+    </div>
+    <div class="input-wrapper">
+        <textarea id="barcode-input" placeholder="데이터를 입력하거나 스캔하세요..."></textarea>
+    </div>
+    <div class="btn-row">
+        <button class="scan-btn" onclick="toggleScanner()">🔍 스캔</button>
+        <button class="main-btn" onclick="handleGenerate()">바코드 생성</button>  
+        <button class="clear-btn" onclick="handleClear()">삭제</button>
+    </div>
+    <button id="save-all-btn" onclick="downloadAll()">📂 생성된 바코드 전체 저장 (ZIP)</button>
+    <div id="reader"></div>
+    <div id="result-list"></div>
+</div>
+
+<script>
+    let currentType = 'code128';
+    let html5QrcodeScanner = null;
+    let audioCtx = null;
+    let canScan = true;
+
+    // iOS 사운드 재생 준비
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playBeep() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function setType(val, btn) {
+        currentType = val;
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function toggleScanner() {
+        initAudio(); // 버튼 클릭 시 오디오 활성화
+        const readerDiv = document.getElementById('reader');
+        const scanBtn = document.querySelector('.scan-btn');
+
+        if (readerDiv.style.display === 'block') {
+            readerDiv.style.display = 'none';
+            scanBtn.innerText = '🔍 스캔';
+            scanBtn.style.background = '#ddd';
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().catch(err => console.log(err));
+            }
+        } else {
+            readerDiv.style.display = 'block';
+            scanBtn.innerText = '🛑 스캔종료';
+            scanBtn.style.background = '#ffcccc';
+
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5Qrcode("reader");
+            }
+
+            // 멀티 바코드 인식을 위한 엔진 설정 강화
+            const config = { 
+                fps: 20, 
+                qrbox: { width: 280, height: 280 },
+                aspectRatio: 1.0,
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true // iOS 최신 API 활용
+                }
+            };
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                config,
+                (text) => {
+                    if (canScan) {
+                        canScan = false;
+                        playBeep();
+                        if (navigator.vibrate) navigator.vibrate(100);
+
+                        const input = document.getElementById('barcode-input');
+                        input.value += (input.value ? "\n" : "") + text;
+                        input.scrollTop = input.scrollHeight;
+
+                        // 1초 후 다음 인식 허용
+                        setTimeout(() => { canScan = true; }, 1000);
+                    }
+                }
+            ).catch(err => alert("카메라를 사용할 수 없습니다."));
+        }
+    }
+
+    function handleClear() {
+        if(confirm("모든 내용을 지우시겠습니까?")) {
+            document.getElementById('barcode-input').value = '';
+            document.getElementById('result-list').innerHTML = '';
+            document.getElementById('save-all-btn').style.display = 'none';
+        }
+    }
+
+    function handleGenerate() {
+        const input = document.getElementById('barcode-input').value;
+        if (!input.trim()) return alert("데이터를 입력해주세요!");
+        const lines = input.split('\n').filter(l => l.trim() !== '');
+        const listContainer = document.getElementById('result-list');
+        listContainer.innerHTML = ''; 
+
+        lines.forEach((line) => {
+            let data = line.trim();
+            let displayText = data;
+            let format = currentType;
+            
+            if (currentType === 'datamatrix_hkmc') {
+                const parts = data.split(/[, \t;]+/).filter(p => p.trim() !== '');
+                if (parts.length >= 3) {
+                    format = 'datamatrix';
+                    const RS = String.fromCharCode(30), GS = String.fromCharCode(29), EOT = String.fromCharCode(4);
+                    let body = `P${parts[0].trim()}${GS}V${parts[1].trim()}${GS}Q${parts[2].trim()}`;
+                    if (parts.length >= 4) body += `${GS}A${parts[3].trim()}`;
+                    data = `[)>${RS}06${GS}${body}${RS}${EOT}`;
+                    displayText = `[HKMC] ${parts[0].trim()} | ${parts[1].trim()} | ${parts[2].trim()}${parts[3] ? ' | '+parts[3] : ''}`;
+                }
+            }
+            createCard(data, format, displayText);
+        });
+        if (lines.length > 0) document.getElementById('save-all-btn').style.display = 'block';
+    }
+
+    function createCard(data, format, displayText) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const canvasId = `canvas-${Math.random().toString(36).substr(2, 9)}`;
+        card.innerHTML = `<div class="card-text">${displayText}</div><canvas id="${canvasId}"></canvas>`;
+        document.getElementById('result-list').appendChild(card);
+        const canvas = document.getElementById(canvasId);
+    
+        if (format === 'code128') {
+            JsBarcode(canvas, data, { format: "CODE128", width: 2, height: 80 });
+        } else if (format === 'datamatrix' || format === 'datamatrix_hkmc') {
+            try {
+                bwipjs.toCanvas(canvas, { bcid: 'datamatrix', text: data, scale: 4, padding: 10, backgroundcolor: 'FFFFFF' });
+            } catch (e) { console.error(e); }
+        } else {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = `https://barcodeapi.org/api/${format}/${encodeURIComponent(data)}`;
+            img.onload = () => {
+                const ctx = canvas.getContext('2d');
+                canvas.width = 350; canvas.height = 350;
+                ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 25, 25, 300, 300);
+            };
+        }
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'download-btn';
+        saveBtn.innerText = '📷 이미지 저장';
+        saveBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.download = `barcode.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        };
+        card.appendChild(saveBtn);
+    }
+
+    async function downloadAll() {
+        const zip = new JSZip();
+        const cards = document.querySelectorAll('.card');
+        for (let i = 0; i < cards.length; i++) {
+            const canvas = cards[i].querySelector('canvas');
+            zip.file(`barcode_${i+1}.png`, canvas.toDataURL("image/png").split(',')[1], {base64: true});
+        }
+        const content = await zip.generateAsync({type: "blob"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(content);
+        link.download = "barcodes.zip";
+        link.click();
+    }
+</script>
+</body>
+</html>
