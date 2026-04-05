@@ -1,233 +1,782 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hoonyverse Barcode</title>
+    <title>HOONYVERSE | Industrial Barcode System</title>
+
+    <!-- External Libraries -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://unpkg.com/bwip-js/dist/bwip-js-min.js"></script>
-    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "bg-deep":    "#060c1a",
+                        "bg-base":    "#0b1326",
+                        "bg-card":    "#111827",
+                        "bg-elevated":"#1a2236",
+                        "bg-hover":   "#222a3d",
+                        "border-dim": "#2d3449",
+                        "border-glow":"#434656",
+                        "txt-primary":"#dae2fd",
+                        "txt-secondary":"#8e90a2",
+                        "txt-muted":  "#434656",
+                        "accent-blue":"#b8c3ff",
+                        "accent-deep":"#2e5bff",
+                        "accent-gold":"#ffba20",
+                        "accent-red": "#ff4d6d",
+                        "accent-green":"#4ade80",
+                    },
+                    fontFamily: {
+                        headline: ["Space Grotesk", "sans-serif"],
+                        mono:     ["JetBrains Mono", "monospace"],
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        :root { --main-blue: #002c5f; --main-yellow: #f9c400; }
-        body { font-family: -apple-system, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; -webkit-tap-highlight-color: transparent; }
-        .container { max-width: 500px; margin: auto; }
-        .logo { text-align: center; margin: 20px 0; }
-        .logo img { width: 60%; max-width: 300px; height: auto; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .type-btn { padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: #fff; cursor: pointer; font-weight: bold; }
-        .type-btn.active { background: var(--main-blue); color: #fff; border-color: var(--main-blue); }
-        .input-wrapper { background: #fff; border: 2px solid var(--main-blue); border-radius: 12px; padding: 10px; }
-        textarea { width: 100%; height: 120px; border: none; outline: none; resize: none; font-size: 14px; box-sizing: border-box; }
-        .btn-row { display: flex; gap: 8px; margin-top: 20px; }
-        .main-btn { flex: 2; background: var(--main-yellow); color: var(--main-blue); border: none; padding: 15px 5px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; }
-        .scan-btn { flex: 1; background: #ddd; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .clear-btn { flex: 1; background: #ff4d4d; color: #fff; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        #save-all-btn { display: none; width: 100%; background: var(--main-blue); color: #fff; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 16px; margin-top: 20px; cursor: pointer; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 10px; display: none; background: #000; }
-        .card { background: #fff; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card-text { font-size: 12px; font-weight: bold; color: #888; margin-bottom: 10px; word-break: break-all; background: #f9f9f9; padding: 5px; border-radius: 5px; }
-        canvas { max-width: 100%; height: auto !important; }
-        .download-btn { margin-top: 15px; background: #eef2ff; color: #007aff; border: none; padding: 10px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; }
+        :root {
+            --blue:  #b8c3ff;
+            --deep:  #2e5bff;
+            --gold:  #ffba20;
+            --red:   #ff4d6d;
+            --green: #4ade80;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        body {
+            background: #060c1a;
+            color: #dae2fd;
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100dvh;
+            overflow-x: hidden;
+        }
+
+        /* ─── Ambient grid background ─── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(46, 91, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(46, 91, 255, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ─── Glow blob ─── */
+        .glow-blob {
+            position: fixed;
+            width: 600px; height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(46,91,255,0.12) 0%, transparent 70%);
+            top: -200px; left: -200px;
+            pointer-events: none;
+            z-index: 0;
+            animation: blobDrift 12s ease-in-out infinite alternate;
+        }
+        @keyframes blobDrift {
+            to { transform: translate(80px, 60px); }
+        }
+
+        /* ─── Header ─── */
+        .app-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            height: 60px;
+            background: rgba(6, 12, 26, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(67,70,86,0.4);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+        }
+        .header-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 900;
+            font-size: 1rem;
+            letter-spacing: 0.25em;
+            color: var(--blue);
+            text-transform: uppercase;
+        }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
+            50%      { opacity: .7; box-shadow: 0 0 6px 3px currentColor; }
+        }
+
+        /* ─── Main content ─── */
+        .main-content { position: relative; z-index: 1; }
+
+        /* ─── Tab views ─── */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* ─── Scanner viewfinder ─── */
+        .scanner-stage {
+            position: relative;
+            height: calc(100dvh - 60px - 72px);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .scanner-bg {
+            position: absolute; inset: 0;
+            background: linear-gradient(160deg, #060c1a 0%, #0b1326 50%, #060c1a 100%);
+        }
+        .reticle-wrap {
+            position: relative;
+            width: min(72vw, 300px); aspect-ratio: 1;
+        }
+        .corner { position: absolute; width: 28px; height: 28px; }
+        .corner.tl { top:0; left:0;  border-top: 3px solid var(--gold); border-left:  3px solid var(--gold); border-radius: 4px 0 0 0; }
+        .corner.tr { top:0; right:0; border-top: 3px solid var(--gold); border-right: 3px solid var(--gold); border-radius: 0 4px 0 0; }
+        .corner.bl { bottom:0; left:0;  border-bottom: 3px solid var(--gold); border-left:  3px solid var(--gold); border-radius: 0 0 0 4px; }
+        .corner.br { bottom:0; right:0; border-bottom: 3px solid var(--gold); border-right: 3px solid var(--gold); border-radius: 0 0 4px 0; }
+
+        .laser-line {
+            position: absolute; top: 50%; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--red) 30%, var(--red) 70%, transparent);
+            box-shadow: 0 0 14px var(--red), 0 0 28px rgba(255,77,109,0.4);
+            animation: laserScan 2.4s ease-in-out infinite;
+        }
+        @keyframes laserScan {
+            0%,100% { top: 15%; }
+            50%      { top: 85%; }
+        }
+
+        .reticle-inner {
+            position: absolute; inset: 12px;
+            border: 1px solid rgba(184,195,255,0.08);
+            border-radius: 4px;
+        }
+        .scan-hint {
+            position: absolute; bottom: -44px; left: 50%; transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--gold);
+            background: rgba(6,12,26,0.6); backdrop-filter: blur(8px);
+            padding: 4px 14px; border-radius: 99px;
+            border: 1px solid rgba(255,186,32,0.3);
+        }
+
+        /* scan result card */
+        .scan-result-card {
+            position: absolute; bottom: 16px; left: 16px; right: 16px;
+            background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(16px);
+            border: 1px solid rgba(67,70,86,0.4);
+            border-radius: 16px; padding: 16px;
+        }
+
+        /* ─── HTML5 QR reader overrides ─── */
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 8px; }
+        #reader video { border-radius: 12px; }
+        #reader__dashboard_section_swaplink { color: var(--blue) !important; }
+
+        /* ─── Generate view ─── */
+        .gen-panel {
+            background: rgba(17,24,39,0.7);
+            border: 1px solid rgba(67,70,86,0.35);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        /* Format chips */
+        .fmt-chip {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+            cursor: pointer;
+            border: 1px solid rgba(67,70,86,0.5);
+            background: rgba(17,24,39,0.6);
+            color: #8e90a2;
+            transition: all .2s;
+        }
+        .fmt-chip.active, .fmt-chip:hover {
+            background: linear-gradient(135deg, var(--blue), var(--deep));
+            color: #001356;
+            border-color: transparent;
+        }
+
+        /* textarea */
+        .data-input {
+            width: 100%; box-sizing: border-box;
+            background: rgba(6,12,26,0.6);
+            border: 1px solid rgba(67,70,86,0.4);
+            border-radius: 10px;
+            color: #dae2fd;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            padding: 14px;
+            resize: none; outline: none;
+            transition: border-color .2s;
+        }
+        .data-input:focus { border-color: rgba(184,195,255,0.5); }
+        .data-input::placeholder { color: rgba(142,144,162,0.5); }
+
+        /* Buttons */
+        .btn-generate {
+            width: 100%;
+            background: linear-gradient(135deg, var(--blue), var(--deep));
+            color: #001356;
+            border: none; border-radius: 12px;
+            padding: 15px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 800; font-size: 15px; letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 8px 24px rgba(46,91,255,0.3);
+        }
+        .btn-generate:active { transform: scale(0.98); box-shadow: 0 4px 12px rgba(46,91,255,0.2); }
+
+        .btn-scan {
+            flex: 1;
+            background: rgba(17,24,39,0.8);
+            border: 1px solid rgba(67,70,86,0.5);
+            border-radius: 10px;
+            color: var(--blue);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 13px;
+            cursor: pointer;
+            padding: 12px 0;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all .2s;
+        }
+        .btn-scan:hover { background: rgba(184,195,255,0.1); }
+        .btn-scan.scanning { background: rgba(255,77,109,0.15); border-color: rgba(255,77,109,0.4); color: var(--red); }
+
+        .btn-clear {
+            flex: 1;
+            background: rgba(255,77,109,0.15);
+            border: 1px solid rgba(255,77,109,0.3);
+            border-radius: 10px;
+            color: var(--red);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 13px;
+            cursor: pointer;
+            padding: 12px 0;
+            transition: all .2s;
+        }
+        .btn-clear:hover { background: rgba(255,77,109,0.25); }
+
+        /* Barcode result cards */
+        .barcode-card {
+            background: rgba(17,24,39,0.8);
+            border: 1px solid rgba(67,70,86,0.3);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            animation: slideUp .3s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .barcode-card canvas { max-width: 100%; height: auto !important; }
+        .barcode-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: #8e90a2;
+            word-break: break-all;
+            background: rgba(6,12,26,0.5);
+            border-radius: 6px; padding: 6px 10px;
+            margin-bottom: 14px;
+        }
+        .btn-download {
+            width: 100%; margin-top: 14px;
+            background: rgba(184,195,255,0.1);
+            border: 1px solid rgba(184,195,255,0.2);
+            border-radius: 8px; padding: 10px;
+            color: var(--blue);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 12px; letter-spacing: 0.05em;
+            cursor: pointer; transition: all .2s;
+        }
+        .btn-download:hover { background: rgba(184,195,255,0.2); }
+
+        .btn-zip {
+            width: 100%;
+            background: rgba(17,24,39,0.8);
+            border: 1px solid rgba(67,70,86,0.4);
+            border-radius: 12px; padding: 14px;
+            color: var(--blue);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700; font-size: 13px; letter-spacing: 0.05em;
+            cursor: pointer; transition: all .2s;
+            display: none;
+        }
+        .btn-zip:hover { background: rgba(184,195,255,0.1); border-color: rgba(184,195,255,0.3); }
+
+        /* ─── Bottom Nav ─── */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+            height: 72px;
+            background: rgba(11,19,38,0.95);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(67,70,86,0.35);
+            border-radius: 20px 20px 0 0;
+            display: flex; align-items: center; justify-content: space-around;
+            padding: 0 8px 8px;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 3px; padding: 8px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: none; background: transparent;
+            color: rgba(218,226,253,0.35);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            transition: all .2s;
+        }
+        .nav-item:hover { color: var(--blue); }
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--blue), var(--deep));
+            color: #001356;
+        }
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* ─── Status bar in scanner ─── */
+        .status-pills {
+            position: absolute; top: 16px; right: 16px;
+            display: flex; flex-direction: column; gap: 8px; z-index: 10;
+        }
+        .status-pill {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(17,24,39,0.8); backdrop-filter: blur(8px);
+            border: 1px solid rgba(67,70,86,0.4);
+            border-radius: 8px; padding: 5px 10px;
+            font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+            color: #8e90a2;
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(67,70,86,0.6); border-radius: 2px; }
+
+        /* ─── Info tip ─── */
+        .info-tip {
+            background: rgba(17,24,39,0.6);
+            border: 1px solid rgba(255,186,32,0.2);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex; gap: 12px; align-items: flex-start;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="logo"><img src="logo.png" alt="Hoonyverse Logo"></div>
-    <div class="grid">
-        <button class="type-btn active" onclick="setType('code128', this)">CODE128</button>
-        <button class="type-btn" onclick="setType('qr', this)">QR CODE</button>
-        <button class="type-btn" onclick="setType('datamatrix', this)">DATAMATRIX</button>
-        <button class="type-btn" onclick="setType('datamatrix_hkmc', this)">현대기아 전용</button>
+
+<!-- Ambient background -->
+<div class="glow-blob"></div>
+
+<!-- ─── Header ─── -->
+<header class="app-header">
+    <button style="background:none;border:none;cursor:pointer;color:#8e90a2;padding:0;">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+
+    <img src="https://raw.githubusercontent.com/swatdo/barcode-app/main/logo.png" alt="Hoonyverse" style="height:36px;width:auto;object-fit:contain;">
+
+    <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:5px;">
+            <span class="status-dot" style="background:var(--green);color:var(--green);"></span>
+            <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:#8e90a2;text-transform:uppercase;">LIVE</span>
+        </div>
+        <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;border:1px solid rgba(67,70,86,0.5);">
+            <div style="width:100%;height:100%;background:linear-gradient(135deg,var(--blue),var(--deep));display:flex;align-items:center;justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:16px;color:#001356;">person</span>
+            </div>
+        </div>
     </div>
-    <div class="input-wrapper">
-        <textarea id="barcode-input" placeholder="데이터를 입력하거나 스캔하세요..."></textarea>
+</header>
+
+<!-- ─── Main Content ─── -->
+<div class="main-content" style="padding-top:60px;padding-bottom:72px;min-height:100dvh;">
+
+    <!-- ══════════ SCAN VIEW ══════════ -->
+    <div id="view-scan" class="view active">
+        <div class="scanner-stage">
+            <div class="scanner-bg"></div>
+
+            <!-- Status pills -->
+            <div class="status-pills">
+                <div class="status-pill">
+                    <span class="material-symbols-outlined" style="font-size:14px;color:var(--blue);font-variation-settings:'FILL' 1;">signal_cellular_4_bar</span>
+                    <span>SIGNAL</span>
+                </div>
+                <div class="status-pill">
+                    <span class="material-symbols-outlined" style="font-size:14px;color:var(--gold);font-variation-settings:'FILL' 1;">battery_charging_full</span>
+                    <span>BATT</span>
+                </div>
+                <div class="status-pill">
+                    <span class="status-dot" style="background:var(--red);color:var(--red);width:8px;height:8px;"></span>
+                    <span>LASER</span>
+                </div>
+            </div>
+
+            <!-- Reticle -->
+            <div style="position:relative;z-index:5;">
+                <div class="reticle-wrap">
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+                    <div class="corner br"></div>
+                    <div class="reticle-inner"></div>
+                    <div class="laser-line"></div>
+                    <div class="scan-hint">Align Barcode within Frame</div>
+                </div>
+            </div>
+
+            <!-- Scanner toggle btn (center bottom of reticle area) -->
+            <button id="scan-toggle-btn" onclick="toggleScanner()"
+                style="margin-top:80px;position:relative;z-index:5;
+                       background:linear-gradient(135deg,var(--blue),var(--deep));
+                       color:#001356;border:none;border-radius:50px;
+                       padding:14px 36px;
+                       font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:13px;
+                       letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;
+                       box-shadow:0 8px 24px rgba(46,91,255,0.4);
+                       display:flex;align-items:center;gap:8px;transition:all .2s;">
+                <span class="material-symbols-outlined" style="font-size:18px;">barcode_scanner</span>
+                카메라 스캔 시작
+            </button>
+
+            <!-- hidden QR reader -->
+            <div id="reader" style="display:none;position:absolute;inset:0;z-index:20;background:rgba(6,12,26,0.95);"></div>
+
+            <!-- Last scan card -->
+            <div class="scan-result-card" id="scan-result-card" style="display:none;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div style="width:32px;height:32px;border-radius:8px;background:rgba(74,222,128,0.15);display:flex;align-items:center;justify-content:center;">
+                            <span class="material-symbols-outlined" style="color:var(--green);font-size:18px;font-variation-settings:'FILL' 1;">check_circle</span>
+                        </div>
+                        <div>
+                            <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;color:#8e90a2;text-transform:uppercase;">스캔 성공</div>
+                            <div id="scan-time" style="font-size:11px;color:rgba(218,226,253,0.5);font-family:'JetBrains Mono',monospace;"></div>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined" style="color:#434656;">more_vert</span>
+                </div>
+                <div style="background:rgba(6,12,26,0.5);border-radius:10px;padding:12px;">
+                    <div style="font-size:9px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">스캔 데이터</div>
+                    <div id="scan-data-display" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#dae2fd;word-break:break-all;"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="btn-row">
-        <button class="scan-btn" onclick="toggleScanner()">🔍 스캔</button>
-        <button class="main-btn" onclick="handleGenerate()">바코드 생성</button>  
-        <button class="clear-btn" onclick="handleClear()">삭제</button>
+
+    <!-- ══════════ GENERATE VIEW ══════════ -->
+    <div id="view-generate" class="view">
+        <div style="padding:20px;max-width:540px;margin:auto;">
+
+            <!-- Data Entry -->
+            <div class="gen-panel" style="margin-bottom:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                    <span style="font-size:9px;font-weight:800;letter-spacing:0.2em;color:rgba(184,195,255,0.6);text-transform:uppercase;">DATA ENTRY SHELL</span>
+                    <span class="material-symbols-outlined" style="font-size:16px;color:#434656;">keyboard</span>
+                </div>
+
+                <textarea id="barcode-input" class="data-input" rows="5"
+                    placeholder="데이터를 입력하거나 스캔하세요.&#13;&#10;[HKMC 전용 모드]&#13;&#10;품번, 업체코드, 수량, ALC코드 순으로 입력&#13;&#10;예) 81970F2000,VABC,100,G01"></textarea>
+
+                <!-- Format chips -->
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+                    <button class="fmt-chip active" onclick="setType('code128',this)">CODE128</button>
+                    <button class="fmt-chip" onclick="setType('qr',this)">QR CODE</button>
+                    <button class="fmt-chip" onclick="setType('datamatrix',this)">DATAMATRIX</button>
+                    <button class="fmt-chip" onclick="setType('datamatrix_hkmc',this)">현대기아 전용</button>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <button class="btn-generate" onclick="handleGenerate()" style="flex:2;">
+                    <span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle;">qr_code_2</span>
+                    바코드 생성
+                </button>
+                <button class="btn-clear" onclick="handleClear()" style="flex:1;padding:14px 0;">
+                    <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;">delete</span>
+                    삭제
+                </button>
+            </div>
+
+            <!-- ZIP save -->
+            <button class="btn-zip" id="save-all-btn" onclick="downloadAll()" style="margin-top:12px;">
+                <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;">folder_zip</span>
+                생성된 바코드 전체 저장 (ZIP)
+            </button>
+
+            <!-- Info tip -->
+            <div class="info-tip" style="margin-top:16px;">
+                <span class="material-symbols-outlined" style="color:var(--gold);font-size:20px;font-variation-settings:'FILL' 1;flex-shrink:0;">info</span>
+                <div>
+                    <div style="font-size:9px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">PRO-TIP: 대량 생성</div>
+                    <p style="font-size:12px;color:#8e90a2;line-height:1.6;margin:0;">
+                        줄 바꿈으로 여러 바코드를 한 번에 생성하세요. 쉼표로 매개변수를 구분하세요. ZEBRA 열전사 프린터에 최적화되어 있습니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="result-list" style="margin-top:20px;display:flex;flex-direction:column;gap:14px;"></div>
+        </div>
     </div>
-    <button id="save-all-btn" onclick="downloadAll()">📂 생성된 바코드 전체 저장 (ZIP)</button>
-    <div id="reader"></div>
-    <div id="result-list"></div>
+
+    <!-- ══════════ SYNC VIEW ══════════ -->
+    <div id="view-sync" class="view">
+        <div style="padding:40px 20px;text-align:center;max-width:400px;margin:auto;">
+            <div style="width:80px;height:80px;border-radius:20px;background:rgba(184,195,255,0.1);border:1px solid rgba(184,195,255,0.2);display:flex;align-items:center;justify-content:center;margin:40px auto 20px;">
+                <span class="material-symbols-outlined" style="font-size:40px;color:var(--blue);">sync</span>
+            </div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:8px;">동기화</div>
+            <div style="font-size:13px;color:#8e90a2;line-height:1.6;">데이터 동기화 기능은 준비 중입니다.</div>
+        </div>
+    </div>
+
 </div>
 
+<!-- ─── Bottom Nav ─── -->
+<nav class="bottom-nav">
+    <button class="nav-item active" id="nav-scan" onclick="switchView('scan')">
+        <span class="material-symbols-outlined">barcode_scanner</span>
+        SCAN
+    </button>
+    <button class="nav-item" id="nav-generate" onclick="switchView('generate')">
+        <span class="material-symbols-outlined">qr_code_2</span>
+        GENERATE
+    </button>
+    <button class="nav-item" id="nav-sync" onclick="switchView('sync')">
+        <span class="material-symbols-outlined">sync</span>
+        SYNC
+    </button>
+</nav>
+
+<!-- ─── JavaScript ─── -->
 <script>
-    let currentType = 'code128';
-    let html5QrcodeScanner = null;
-    let audioCtx = null;
-    let canScan = true;
+    // ── State ──
+    let currentType   = 'code128';
+    let scannerScan   = null;   // scanner in SCAN view
+    let scannerScanOn = false;
 
-    // iOS 사운드 재생 준비
-    function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
+    // ── View switching ──
+    function switchView(name) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.getElementById('view-' + name).classList.add('active');
+        document.getElementById('nav-' + name).classList.add('active');
+
+        // Stop scanners when switching away
+        if (name !== 'scan' && scannerScanOn) stopScannerScan();
     }
 
-    function playBeep() {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
-    }
-
+    // ── Format type ──
     function setType(val, btn) {
         currentType = val;
-        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.fmt-chip').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
     }
 
-    function toggleScanner() {
-        initAudio(); // 버튼 클릭 시 오디오 활성화
-        const readerDiv = document.getElementById('reader');
-        const scanBtn = document.querySelector('.scan-btn');
-
-        if (readerDiv.style.display === 'block') {
-            readerDiv.style.display = 'none';
-            scanBtn.innerText = '🔍 스캔';
-            scanBtn.style.background = '#ddd';
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.stop().catch(err => console.log(err));
-            }
-        } else {
-            readerDiv.style.display = 'block';
-            scanBtn.innerText = '🛑 스캔종료';
-            scanBtn.style.background = '#ffcccc';
-
-            if (!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5Qrcode("reader");
-            }
-
-            // 멀티 바코드 인식을 위한 엔진 설정 강화
-            const config = { 
-                fps: 20, 
-                qrbox: { width: 280, height: 280 },
-                aspectRatio: 1.0,
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true // iOS 최신 API 활용
-                }
-            };
-
-            html5QrcodeScanner.start(
-                { facingMode: "environment" }, 
-                config,
-                (text) => {
-                    if (canScan) {
-                        canScan = false;
-                        playBeep();
-                        if (navigator.vibrate) navigator.vibrate(100);
-
-                        const input = document.getElementById('barcode-input');
-                        input.value += (input.value ? "\n" : "") + text;
-                        input.scrollTop = input.scrollHeight;
-
-                        // 1초 후 다음 인식 허용
-                        setTimeout(() => { canScan = true; }, 1000);
-                    }
-                }
-            ).catch(err => alert("카메라를 사용할 수 없습니다."));
-        }
+    // ── Beep ──
+    function playBeep() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 0.12);
+        } catch(e){}
     }
 
+    // ── SCAN view scanner ──
+    function toggleScanner() {
+        if (!scannerScanOn) startScannerScan();
+        else stopScannerScan();
+    }
+
+    function startScannerScan() {
+        const readerDiv = document.getElementById('reader');
+        const btn       = document.getElementById('scan-toggle-btn');
+        readerDiv.style.display = 'block';
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;">stop_circle</span> 스캔 종료';
+        btn.style.background = 'linear-gradient(135deg,#ff4d6d,#c0133a)';
+        btn.style.color = '#fff';
+        scannerScanOn = true;
+
+        if (!scannerScan) {
+            scannerScan = new Html5QrcodeScanner('reader', { fps: 15, qrbox: 240 });
+        }
+        let last = '';
+        scannerScan.render((text) => {
+            if (text !== last) {
+                last = text;
+                playBeep();
+                if (navigator.vibrate) navigator.vibrate(100);
+                showScanResult(text);
+                setTimeout(() => { last = ''; }, 2000);
+                if (text.trim().toLowerCase().startsWith('http')) {
+                    if (confirm('링크가 감지되었습니다. 이동하시겠습니까?\n\n' + text)) {
+                        window.open(text.trim(), '_blank');
+                    }
+                }
+            }
+        }, () => {});
+    }
+
+    function stopScannerScan() {
+        const readerDiv = document.getElementById('reader');
+        const btn       = document.getElementById('scan-toggle-btn');
+        readerDiv.style.display = 'none';
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;">barcode_scanner</span> 카메라 스캔 시작';
+        btn.style.background = 'linear-gradient(135deg,var(--blue),var(--deep))';
+        btn.style.color = '#001356';
+        scannerScanOn = false;
+        if (scannerScan) { scannerScan.clear().catch(()=>{}); scannerScan = null; }
+    }
+
+    function showScanResult(text) {
+        const card = document.getElementById('scan-result-card');
+        document.getElementById('scan-data-display').textContent = text;
+        document.getElementById('scan-time').textContent = new Date().toLocaleTimeString('ko-KR');
+        card.style.display = 'block';
+    }
+
+
+
+    // ── Clear ──
     function handleClear() {
-        if(confirm("모든 내용을 지우시겠습니까?")) {
+        if (confirm('모든 내용을 지우시겠습니까?')) {
             document.getElementById('barcode-input').value = '';
             document.getElementById('result-list').innerHTML = '';
             document.getElementById('save-all-btn').style.display = 'none';
         }
     }
 
+    // ── Generate ──
     function handleGenerate() {
         const input = document.getElementById('barcode-input').value;
-        if (!input.trim()) return alert("데이터를 입력해주세요!");
+        if (!input.trim()) return alert('데이터를 입력해주세요!');
         const lines = input.split('\n').filter(l => l.trim() !== '');
         const listContainer = document.getElementById('result-list');
-        listContainer.innerHTML = ''; 
+        listContainer.innerHTML = '';
 
-        lines.forEach((line) => {
+        lines.forEach((line, i) => {
             let data = line.trim();
             let displayText = data;
             let format = currentType;
-            
+
             if (currentType === 'datamatrix_hkmc') {
-                const parts = data.split(/[, \t;]+/).filter(p => p.trim() !== '');
+                const parts = data.split(/[,\s\t;]+/).filter(p => p.trim() !== '');
                 if (parts.length >= 3) {
                     format = 'datamatrix';
-                    const RS = String.fromCharCode(30), GS = String.fromCharCode(29), EOT = String.fromCharCode(4);
+                    const RS = String.fromCharCode(30);
+                    const GS = String.fromCharCode(29);
+                    const EOT = String.fromCharCode(4);
                     let body = `P${parts[0].trim()}${GS}V${parts[1].trim()}${GS}Q${parts[2].trim()}`;
                     if (parts.length >= 4) body += `${GS}A${parts[3].trim()}`;
                     data = `[)>${RS}06${GS}${body}${RS}${EOT}`;
-                    displayText = `[HKMC] ${parts[0].trim()} | ${parts[1].trim()} | ${parts[2].trim()}${parts[3] ? ' | '+parts[3] : ''}`;
+                    displayText = `(HKMC) ${parts[0].trim()} | ${parts[1].trim()} | ${parts[2].trim()}${parts[3] ? ' | '+parts[3] : ''}`;
+                } else {
+                    alert(`[${i+1}행] 데이터 부족: 품번, 업체코드, 수량이 필요합니다.`);
+                    return;
                 }
             }
             createCard(data, format, displayText);
         });
+
         if (lines.length > 0) document.getElementById('save-all-btn').style.display = 'block';
     }
 
     function createCard(data, format, displayText) {
         const card = document.createElement('div');
-        card.className = 'card';
-        const canvasId = `canvas-${Math.random().toString(36).substr(2, 9)}`;
-        card.innerHTML = `<div class="card-text">${displayText}</div><canvas id="${canvasId}"></canvas>`;
+        card.className = 'barcode-card';
+        const cid = 'c_' + Math.random().toString(36).substr(2, 9);
+        card.innerHTML = `<div class="barcode-label">${displayText}</div><canvas id="${cid}"></canvas>`;
         document.getElementById('result-list').appendChild(card);
-        const canvas = document.getElementById(canvasId);
-    
+
+        const canvas = document.getElementById(cid);
         if (format === 'code128') {
-            JsBarcode(canvas, data, { format: "CODE128", width: 2, height: 80 });
-        } else if (format === 'datamatrix' || format === 'datamatrix_hkmc') {
+            JsBarcode(canvas, data, { format: 'CODE128', width: 2, height: 80, background: 'transparent', lineColor: '#dae2fd' });
+        } else if (format === 'datamatrix' && data.includes('[)>')) {
             try {
-                bwipjs.toCanvas(canvas, { bcid: 'datamatrix', text: data, scale: 4, padding: 10, backgroundcolor: 'FFFFFF' });
-            } catch (e) { console.error(e); }
+                bwipjs.toCanvas(canvas, { bcid: 'datamatrix', text: data, scale: 4, padding: 10, backgroundcolor: '111827' });
+            } catch(e){ console.error(e); }
         } else {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
+            const img = new Image(); img.crossOrigin = 'anonymous';
             img.src = `https://barcodeapi.org/api/${format}/${encodeURIComponent(data)}`;
             img.onload = () => {
                 const ctx = canvas.getContext('2d');
                 canvas.width = 350; canvas.height = 350;
-                ctx.fillStyle = "white"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,350,350);
                 ctx.drawImage(img, 25, 25, 300, 300);
             };
         }
 
-        const saveBtn = document.createElement('button');
-        saveBtn.className = 'download-btn';
-        saveBtn.innerText = '📷 이미지 저장';
-        saveBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.download = `barcode.png`;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
+        const btn = document.createElement('button');
+        btn.className = 'btn-download';
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">download</span> 이미지로 저장';
+        btn.onclick = () => {
+            try {
+                const link = document.createElement('a');
+                link.download = `barcode_${displayText.replace(/[^a-z0-9]/gi,'_')}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch(e){ alert('이미지 저장 중 오류가 발생했습니다.'); }
         };
-        card.appendChild(saveBtn);
+        card.appendChild(btn);
     }
 
     async function downloadAll() {
         const zip = new JSZip();
-        const cards = document.querySelectorAll('.card');
+        const cards = document.querySelectorAll('.barcode-card');
+        if (!cards.length) return alert('저장할 바코드가 없습니다.');
+        alert(`${cards.length}개의 바코드를 압축합니다.`);
         for (let i = 0; i < cards.length; i++) {
-            const canvas = cards[i].querySelector('canvas');
-            zip.file(`barcode_${i+1}.png`, canvas.toDataURL("image/png").split(',')[1], {base64: true});
+            const cv = cards[i].querySelector('canvas');
+            zip.file(`barcode_${i+1}.png`, cv.toDataURL('image/png').split(',')[1], { base64: true });
         }
-        const content = await zip.generateAsync({type: "blob"});
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(content);
-        link.download = "barcodes.zip";
-        link.click();
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'hoonyverse_barcodes.zip';
+        a.click();
     }
+
+    // ── Visibility change (camera recovery) ──
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            if (scannerScanOn && scannerScan) {
+                scannerScan.clear().then(() => { startScannerScan(); }).catch(() => { startScannerScan(); });
+            }
+    
+        }
+    });
 </script>
 </body>
 </html>
+
