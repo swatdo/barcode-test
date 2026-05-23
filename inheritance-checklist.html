@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상속 절차 체크리스트</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* 로그인 화면 */
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    }
+
+    .login-box {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 40px 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    .login-icon {
+      text-align: center;
+      font-size: 60px;
+      margin-bottom: 20px;
+      filter: grayscale(100%);
+    }
+
+    .login-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #bbb;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #555;
+      background: #0f0f0f;
+    }
+
+    .form-input::placeholder {
+      color: #555;
+    }
+
+    .form-input::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
+
+    .date-input-wrapper {
+      position: relative;
+    }
+
+    .date-input-wrapper .form-input {
+      padding-right: 45px;
+    }
+
+    .calendar-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+      filter: grayscale(100%) brightness(2);
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .hidden-date-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #555;
+    }
+
+    .checkbox-label {
+      font-size: 13px;
+      color: #999;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: #1a1a1a;
+      border: 2px solid #444;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      background: #0f0f0f;
+      border-color: #666;
+    }
+
+    .privacy-note {
+      text-align: center;
+      font-size: 11px;
+      color: #666;
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+
+    /* 대시보드 */
+    .dashboard {
+      min-height: 100vh;
+      padding: 20px;
+      background: #0a0a0a;
+    }
+
+    .header {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .user-info h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .user-info p {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .btn-logout {
+      padding: 6px 14px;
+      background: #0f0f0f;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #aaa;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .total-progress {
+      margin-top: 16px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .progress-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #bbb;
+    }
+
+    .progress-percent {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #333, #555);
+      transition: width 0.5s;
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 10px;
+      color: #666;
+      margin-top: 6px;
+    }
+
+    .sections {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 컴팩트 섹션 카드 */
+    .section-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .section-header:active {
+      background: #1f1f1f;
+    }
+
+    .section-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .arrow {
+      font-size: 14px;
+      color: #666;
+      transition: transform 0.3s;
+    }
+
+    .section-card.expanded .arrow {
+      transform: rotate(90deg);
+    }
+
+    .section-info {
+      flex: 1;
+    }
+
+    .section-top-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      border: 1px solid;
+    }
+
+    .badge-urgent {
+      background: #1a0f0f;
+      border-color: #3a1f1f;
+      color: #ff6b6b;
+    }
+
+    .badge-soon {
+      background: #1a1a0f;
+      border-color: #3a3a1f;
+      color: #ffd93d;
+    }
+
+    .badge-normal {
+      background: #0f1a0f;
+      border-color: #1f3a1f;
+      color: #6bcf7f;
+    }
+
+    .badge-later {
+      background: #0f0f1a;
+      border-color: #1f1f3a;
+      color: #6b9bff;
+    }
+
+    .dday {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .dday-danger { color: #ff6b6b; }
+    .dday-warning { color: #ffd93d; }
+    .dday-safe { color: #6bcf7f; }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .section-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .count {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .count-sep {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .section-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .section-card.expanded .section-content {
+      max-height: 2000px;
+    }
+
+    .checklist-item {
+      padding: 12px 16px;
+      border-top: 1px solid #2a2a2a;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .checkbox {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border: 2px solid #444;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 2px;
+    }
+
+    .checkbox:active {
+      transform: scale(0.9);
+    }
+
+    .checkbox.checked {
+      background: #2a2a2a;
+      border-color: #555;
+    }
+
+    .checkbox.checked::after {
+      content: "✓";
+      color: #aaa;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .item-content {
+      flex: 1;
+    }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 6px;
+      transition: all 0.2s;
+    }
+
+    .item-title.checked {
+      color: #555;
+      text-decoration: line-through;
+    }
+
+    .item-info {
+      font-size: 12px;
+      color: #888;
+      line-height: 1.5;
+    }
+
+    .item-info div {
+      margin-bottom: 3px;
+    }
+
+    .info-label {
+      display: inline-block;
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-right: 4px;
+      color: #999;
+    }
+
+    /* 하단 버튼 섹션 */
+    .bottom-buttons {
+      background: #1a1a1a;
+      border-top: 1px solid #2a2a2a;
+      padding: 10px;
+      margin-top: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .button-grid {
+      max-width: 600px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .service-card {
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .service-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+    }
+
+    .service-buttons {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .quick-btn {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      color: #aaa;
+      font-size: 11px;
+      transition: all 0.2s;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .quick-btn:active {
+      transform: scale(0.95);
+      background: #0f0f0f;
+      border-color: #555;
+    }
+
+    .quick-btn-icon {
+      font-size: 14px;
+    }
+
+    .single-btn {
+      width: 100%;
+    }
+
+    .urgent-box {
+      max-width: 600px;
+      margin: 0 auto 20px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .urgent-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .urgent-item {
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      color: #bbb;
+    }
+
+    .urgent-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    const checklistData = [
+      {
+        id: 'immediate',
+        title: '즉시 ~ 3일 (장례 기간)',
+        badge: 'urgent',
+        deadline: 3,
+        items: [
+          { title: '사망진단서 발급', org: '병원/의사', docs: '신분증 (10부 이상)' },
+          { title: '장례비 현금확보', org: '은행 ATM', docs: '체크카드 (300-500만원)' }
+        ]
+      },
+      {
+        id: 'week1',
+        title: '장례 후 ~ 1주일',
+        badge: 'soon',
+        deadline: 7,
+        items: [
+          { title: '사망신고 ⭐', org: '주민센터', docs: '사망진단서, 신분증' },
+          { title: '가족관계증명서 발급', org: '주민센터', docs: '신분증 (10부 이상)' },
+          { title: '제적등본 발급', org: '주민센터', docs: '신분증 (5부 이상)' },
+          { title: '보험증권/통장 수집', org: '집 안', docs: '서랍, 금고, 서류함 확인' },
+          { title: '자동이체 목록 확인', org: '인터넷뱅킹/앱', docs: '필요 시 해지 또는 유지' }
+        ]
+      },
+      {
+        id: 'week2',
+        title: '1~2주차 (재산조회)',
+        badge: 'normal',
+        deadline: 14,
+        items: [
+          { title: '안심상속 원스톱 신청 ⭐', org: '정부24 또는 주민센터', docs: '신분증, 가족관계증명서' },
+          { title: '금융재산 통합조회', org: '은행 창구 (금감원 파인)', docs: '신분증, 가족관계증명서' },
+          { title: '부동산/자동차 조회', org: '정부24', docs: '가족관계증명서' },
+          { title: '부채 확인 (신용정보)', org: '신용정보원', docs: '가족관계증명서' }
+        ]
+      },
+      {
+        id: 'week4',
+        title: '2~4주차 (연금/보험)',
+        badge: 'normal',
+        deadline: 28,
+        items: [
+          { title: '국민연금 조회', org: '국민연금공단 (1355)', docs: '가족관계증명서' },
+          { title: '건강보험 환급금', org: '건강보험공단 (1577-1000)', docs: '가족관계증명서' },
+          { title: '생명보험금 청구', org: '각 보험사', docs: '사망진단서, 보험증권' },
+          { title: '휴대폰 해지/명의변경', org: '통신사', docs: '가족관계증명서' }
+        ]
+      },
+      {
+        id: 'month1',
+        title: '1개월 이내',
+        badge: 'later',
+        deadline: 30,
+        items: [
+          { title: '전기/가스/수도 명의변경', org: '각 공사', docs: '가족관계증명서' },
+          { title: '신용카드 해지', org: '각 카드사', docs: '사망진단서' }
+        ]
+      },
+      {
+        id: 'month3',
+        title: '3개월 이내',
+        badge: 'urgent',
+        deadline: 90,
+        items: [
+          { title: '상속포기/한정승인 결정 ⭐', org: '가정법원', docs: '재산/부채 목록' }
+        ]
+      },
+      {
+        id: 'month6',
+        title: '6개월 이내',
+        badge: 'urgent',
+        deadline: 180,
+        items: [
+          { title: '상속세 신고 ⭐', org: '세무서', docs: '재산평가서, 상속인 서류' },
+          { title: '취득세 신고', org: '지자체', docs: '상속 부동산 관련' }
+        ]
+      },
+      {
+        id: 'later',
+        title: '이후 (재산 이전)',
+        badge: 'later',
+        deadline: null,
+        items: [
+          { title: '부동산 상속등기', org: '등기소', docs: '상속세 납세증명서' },
+          { title: '예금/증권 상속이전', org: '은행/증권사', docs: '상속인 전원 동의서' }
+        ]
+      }
+    ];
+
+    let state = {
+      user: null,
+      view: 'login',
+      checkedItems: {},
+      rememberMe: false,
+      expandedSections: []
+    };
+
+    function init() {
+      const savedRemember = localStorage.getItem('rememberMe') === 'true';
+      if (savedRemember) {
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+          state.user = JSON.parse(savedUser);
+          state.rememberMe = true;
+          loadCheckedItems(state.user);
+          state.view = 'dashboard';
+        }
+      }
+      render();
+    }
+
+    function loadCheckedItems(user) {
+      const key = `checklist_${user.name}_${user.deathDate}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        state.checkedItems = JSON.parse(saved);
+      }
+    }
+
+    function saveCheckedItems() {
+      const key = `checklist_${state.user.name}_${state.user.deathDate}`;
+      localStorage.setItem(key, JSON.stringify(state.checkedItems));
+    }
+
+    function formatDateInput(input) {
+      let value = input.value.replace(/[^0-9-]/g, '');
+      let numbers = value.replace(/-/g, '');
+
+      if (numbers.length === 8) {
+        const year = numbers.substring(0, 4);
+        const month = numbers.substring(4, 6);
+        const day = numbers.substring(6, 8);
+        input.value = `${year}-${month}-${day}`;
+      } else if (numbers.length > 8) {
+        const year = numbers.substring(0, 4);
+        const month = numbers.substring(4, 6);
+        const day = numbers.substring(6, 8);
+        input.value = `${year}-${month}-${day}`;
+      } else {
+        input.value = numbers;
+      }
+    }
+
+    function syncDateFromPicker() {
+      const datePicker = document.getElementById('hiddenDatePicker');
+      const textInput = document.getElementById('loginDate');
+      textInput.value = datePicker.value;
+    }
+
+    function isValidDate(dateString) {
+      const regex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!regex.test(dateString)) return false;
+
+      const date = new Date(dateString);
+      const [year, month, day] = dateString.split('-').map(Number);
+
+      return date.getFullYear() === year &&
+             date.getMonth() + 1 === month &&
+             date.getDate() === day;
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const name = document.getElementById('loginName').value;
+      let deathDate = document.getElementById('loginDate').value;
+      const rememberCheckbox = document.getElementById('rememberMe');
+
+      const numbers = deathDate.replace(/[^0-9]/g, '');
+      if (numbers.length === 8) {
+        deathDate = `${numbers.substring(0, 4)}-${numbers.substring(4, 6)}-${numbers.substring(6, 8)}`;
+      }
+
+      if (name && deathDate && isValidDate(deathDate)) {
+        state.user = { name, deathDate };
+        state.rememberMe = rememberCheckbox.checked;
+
+        localStorage.setItem('currentUser', JSON.stringify(state.user));
+        localStorage.setItem('rememberMe', state.rememberMe.toString());
+
+        loadCheckedItems(state.user);
+        state.view = 'dashboard';
+        render();
+      } else if (deathDate && !isValidDate(deathDate)) {
+        alert('올바른 날짜 형식을 입력해주세요.\n예: 2026-05-01 또는 20260501');
+      }
+    }
+
+    function handleLogout() {
+      if (!state.rememberMe) {
+        localStorage.removeItem('currentUser');
+      }
+      localStorage.removeItem('rememberMe');
+      state.user = null;
+      state.checkedItems = {};
+      state.rememberMe = false;
+      state.view = 'login';
+      render();
+    }
+
+    function toggleSection(sectionId) {
+      const index = state.expandedSections.indexOf(sectionId);
+      if (index > -1) {
+        state.expandedSections.splice(index, 1);
+      } else {
+        state.expandedSections.push(sectionId);
+      }
+      render();
+    }
+
+    function toggleCheck(sectionId, itemIndex) {
+      const key = `${sectionId}-${itemIndex}`;
+      state.checkedItems[key] = !state.checkedItems[key];
+      saveCheckedItems();
+      render();
+    }
+
+    function getDday(deadline) {
+      if (!deadline || !state.user) return null;
+      const deathDate = new Date(state.user.deathDate);
+      const targetDate = new Date(deathDate);
+      targetDate.setDate(targetDate.getDate() + deadline);
+      const today = new Date();
+      const diff = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+      return diff;
+    }
+
+    function getSectionProgress(sectionId) {
+      const section = checklistData.find(s => s.id === sectionId);
+      const total = section.items.length;
+      const completed = section.items.filter((_, idx) =>
+        state.checkedItems[`${sectionId}-${idx}`]
+      ).length;
+      return { total, completed };
+    }
+
+    function getTotalProgress() {
+      const total = checklistData.reduce((sum, s) => sum + s.items.length, 0);
+      const completed = Object.values(state.checkedItems).filter(v => v).length;
+      return { total, completed, percent: Math.round((completed / total) * 100) };
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+
+      if (state.view === 'login') {
+        app.innerHTML = renderLogin();
+        attachLoginEvents();
+      } else if (state.view === 'dashboard') {
+        app.innerHTML = renderDashboard();
+        attachDashboardEvents();
+      }
+    }
+
+    function attachLoginEvents() {
+      const form = document.getElementById('loginForm');
+      const dateInput = document.getElementById('loginDate');
+      const datePicker = document.getElementById('hiddenDatePicker');
+
+      if (form) {
+        form.addEventListener('submit', handleLogin);
+      }
+
+      if (dateInput) {
+        dateInput.addEventListener('input', function() {
+          formatDateInput(this);
+        });
+      }
+
+      if (datePicker) {
+        datePicker.addEventListener('change', syncDateFromPicker);
+      }
+    }
+
+    function attachDashboardEvents() {
+      if (window.dashboardEventsAttached) return;
+      window.dashboardEventsAttached = true;
+
+      document.getElementById('app').addEventListener('click', function(e) {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+
+        e.preventDefault();
+
+        const action = target.getAttribute('data-action');
+
+        if (action === 'logout') {
+          handleLogout();
+        } else if (action === 'toggle-section') {
+          const sectionId = target.getAttribute('data-section-id');
+          toggleSection(sectionId);
+        } else if (action === 'toggle-check') {
+          const sectionId = target.getAttribute('data-section-id');
+          const itemIndex = parseInt(target.getAttribute('data-item-index'));
+          toggleCheck(sectionId, itemIndex);
+        }
+      });
+    }
+
+    function renderLogin() {
+      return `
+        <div class="login-screen">
+          <div class="login-box">
+            <div class="login-icon">🕊️</div>
+            <h1 class="login-title">상속 절차 체크리스트</h1>
+            <p class="login-subtitle">고인의 정보로 시작하세요</p>
+
+            <form id="loginForm">
+              <div class="form-group">
+                <label class="form-label">고인 성함</label>
+                <input type="text" id="loginName" class="form-input" placeholder="예: 김철수" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">사망일</label>
+                <div class="date-input-wrapper">
+                  <input type="text" id="loginDate" class="form-input"
+                         placeholder="20260501 또는 2026-05-01"
+                         maxlength="10"
+                         required>
+                  <label for="hiddenDatePicker" class="calendar-icon">📅</label>
+                  <input type="date" id="hiddenDatePicker" class="hidden-date-input">
+                </div>
+              </div>
+
+              <div class="checkbox-group">
+                <input type="checkbox" id="rememberMe" class="checkbox-input" ${state.rememberMe ? 'checked' : ''}>
+                <label for="rememberMe" class="checkbox-label">로그인 정보 유지</label>
+              </div>
+
+              <button type="submit" class="btn-primary">시작하기</button>
+            </form>
+
+            <p class="privacy-note">
+              입력하신 정보는 기기에만 저장되며<br>
+              외부로 전송되지 않습니다
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboard() {
+      const totalProgress = getTotalProgress();
+
+      const sectionsHtml = checklistData.map(section => {
+        const progress = getSectionProgress(section.id);
+        const dday = getDday(section.deadline);
+
+        let ddayHtml = '';
+        let ddayClass = '';
+        if (dday !== null) {
+          if (dday < 0) {
+            ddayHtml = `기한초과`;
+            ddayClass = 'dday-danger';
+          } else if (dday === 0) {
+            ddayHtml = 'D-DAY';
+            ddayClass = 'dday-danger';
+          } else if (dday <= 7) {
+            ddayHtml = `D-${dday}`;
+            ddayClass = 'dday-danger';
+          } else if (dday <= 30) {
+            ddayHtml = `D-${dday}`;
+            ddayClass = 'dday-warning';
+          } else {
+            ddayHtml = `D-${dday}`;
+            ddayClass = 'dday-safe';
+          }
+        }
+
+        const itemsHtml = section.items.map((item, idx) => {
+          const isChecked = state.checkedItems[`${section.id}-${idx}`];
+
+          return `
+            <div class="checklist-item">
+              <div class="checkbox ${isChecked ? 'checked' : ''}"
+                   data-action="toggle-check"
+                   data-section-id="${section.id}"
+                   data-item-index="${idx}"></div>
+              <div class="item-content">
+                <div class="item-title ${isChecked ? 'checked' : ''}">${item.title}</div>
+                <div class="item-info">
+                  <div><span class="info-label">기관</span>${item.org}</div>
+                  <div><span class="info-label">서류</span>${item.docs}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="section-card ${state.expandedSections.includes(section.id) ? 'expanded' : ''}" data-section-id="${section.id}">
+            <div class="section-header" data-action="toggle-section" data-section-id="${section.id}">
+              <div class="section-left">
+                <span class="arrow">▶</span>
+                <div class="section-info">
+                  <div class="section-top-row">
+                    <span class="badge badge-${section.badge}">
+                      ${section.badge === 'urgent' ? '긴급' :
+                        section.badge === 'soon' ? '급함' :
+                        section.badge === 'normal' ? '중요' : '일반'}
+                    </span>
+                    ${ddayHtml ? `<span class="dday ${ddayClass}">${ddayHtml}</span>` : ''}
+                  </div>
+                  <div class="section-title">${section.title}</div>
+                </div>
+              </div>
+              <div class="section-right">
+                <span class="count">${progress.completed}</span>
+                <span class="count-sep">/</span>
+                <span class="count">${progress.total}</span>
+              </div>
+            </div>
+            <div class="section-content">
+              ${itemsHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="dashboard">
+          <div class="header">
+            <div class="header-top">
+              <div class="user-info">
+                <h1>${state.user.name}님</h1>
+                <p>사망일: ${state.user.deathDate}</p>
+              </div>
+              <button class="btn-logout" data-action="logout">로그아웃</button>
+            </div>
+
+            <div class="total-progress">
+              <div class="progress-header">
+                <span class="progress-label">전체 진행률</span>
+                <span class="progress-percent">${totalProgress.percent}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${totalProgress.percent}%"></div>
+              </div>
+              <div class="progress-text">${totalProgress.completed} / ${totalProgress.total} 완료</div>
+            </div>
+          </div>
+
+          <div class="urgent-box">
+            <div class="urgent-title">⚠️ 중요 기한</div>
+            <div class="urgent-item">
+              <span>1개월: 사망신고</span>
+              <span>과태료 5만원</span>
+            </div>
+            <div class="urgent-item">
+              <span>3개월: 상속포기/한정승인</span>
+              <span>단순승인</span>
+            </div>
+            <div class="urgent-item">
+              <span>6개월: 상속세 신고</span>
+              <span>가산세</span>
+            </div>
+          </div>
+
+          <div class="sections">${sectionsHtml}</div>
+        </div>
+
+        <div class="bottom-buttons">
+          <div class="button-grid">
+            <div class="service-card">
+              <div class="service-name">정부24</div>
+              <div class="service-buttons">
+                <a href="https://www.gov.kr" target="_blank" class="quick-btn single-btn">
+                  <span class="quick-btn-icon">🌐</span>
+                  <span>웹사이트</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="service-card">
+              <div class="service-name">금융감독원</div>
+              <div class="service-buttons">
+                <a href="https://fine.fss.or.kr" target="_blank" class="quick-btn single-btn">
+                  <span class="quick-btn-icon">🌐</span>
+                  <span>웹사이트</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="service-card">
+              <div class="service-name">국민연금</div>
+              <div class="service-buttons">
+                <a href="tel:1355" class="quick-btn">
+                  <span class="quick-btn-icon">📞</span>
+                  <span>1355</span>
+                </a>
+                <a href="https://www.nps.or.kr" target="_blank" class="quick-btn">
+                  <span class="quick-btn-icon">🌐</span>
+                  <span>웹</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="service-card">
+              <div class="service-name">건강보험</div>
+              <div class="service-buttons">
+                <a href="tel:15771000" class="quick-btn">
+                  <span class="quick-btn-icon">📞</span>
+                  <span>1577-1000</span>
+                </a>
+                <a href="https://www.nhis.or.kr" target="_blank" class="quick-btn">
+                  <span class="quick-btn-icon">🌐</span>
+                  <span>웹</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    init();
+  </script>
+</body>
+</html>
